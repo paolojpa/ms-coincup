@@ -3,9 +3,7 @@
 Painel separado do site para pagar Major Coins a partir dos CSVs de leaderboard do Yunite.
 
 1. Sobe 1 ou mais CSVs (até 10).
-2. Escolhe o modo:
-   - **Combine into one final table**: soma pontos, vitórias e kills da mesma equipe (mesmos jogadores) em todos os arquivos e monta a tabela final por pontos (desempate: vitórias, kills, melhor colocação).
-   - **Pay each file separately**: cada CSV paga sozinho, pela coluna `Placement`.
+2. Os arquivos viram uma tabela final: soma pontos, vitórias e kills da mesma equipe (mesmos jogadores) e ordena por pontos (desempate: vitórias, kills, melhor colocação).
 3. Ajusta a tabela de prêmios por equipe (fica salva como padrão).
 4. **Preview** mostra quanto cada jogador recebe; **Pay** credita.
 

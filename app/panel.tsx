@@ -35,7 +35,8 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function Panel() {
   const [name, setName] = useState("");
-  const [mode, setMode] = useState<Mode>("sum");
+  // Sempre uma tabela final somando todos os CSVs (o modo "separate" saiu do painel).
+  const mode = "sum" as Mode;
   const [files, setFiles] = useState<FileItem[]>([]);
   const [tiers, setTiers] = useState<Tier[]>(DEFAULT_TIERS);
   const [savedTiers, setSavedTiers] = useState<string>(JSON.stringify(DEFAULT_TIERS));
@@ -222,18 +223,9 @@ export default function Panel() {
           <h2>1 · Tournament</h2>
           <input type="text" placeholder="Name (optional, for the history)" value={name} onChange={(e) => setName(e.target.value)} />
           <div style={{ marginTop: 14 }}>
-            <div className="seg">
-              <button className={mode === "sum" ? "on" : ""} onClick={() => setMode("sum")}>
-                Combine into one final table
-              </button>
-              <button className={mode === "separate" ? "on" : ""} onClick={() => setMode("separate")}>
-                Pay each file separately
-              </button>
-            </div>
             <p className="muted" style={{ fontSize: 13, margin: "8px 0 0" }}>
-              {mode === "sum"
-                ? "Points, wins and kills of the same team are added up across all files; the final table ranks by points (ties: wins, kills, best placement)."
-                : "Each file is its own tournament and pays by its own Placement column."}
+              Points, wins and kills of the same team are added up across all files; the final table ranks by points (ties:
+              wins, kills, best placement).
             </p>
           </div>
 

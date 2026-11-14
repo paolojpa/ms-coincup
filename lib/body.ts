@@ -22,7 +22,7 @@ export function readBody(raw: unknown):
   if (size > MAX_BYTES) return { ok: false, error: "Files are too large." };
   const tiers = cleanTiers(body.tiers);
   if (!tiers) return { ok: false, error: "Invalid prize table." };
-  const mode: Mode = body.mode === "separate" ? "separate" : "sum";
+  const mode = "sum" as Mode;
   const name = String(body.name ?? "").trim().slice(0, 100);
   return { ok: true, files, tiers, mode, name };
 }
