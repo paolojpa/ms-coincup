@@ -98,3 +98,5 @@ tr.p3 td:first-child b { background: #d98c4a; }
 .s-dots { display: flex; gap: .5em; }
 .s-dots i { width: .6em; height: .6em; transform: skewX(-12deg); background: #2a332e; }
 .s-dots i.on { background: var(--green); }
+.s-banner { display: block; width: 100%; height: auto; margin-bottom: 1.1vw; }
+.s-waiting { margin-top: 12vh; }

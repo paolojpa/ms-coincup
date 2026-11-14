@@ -9,7 +9,7 @@ import type { Board } from "@/lib/board";
  * ranking das Arenas do site (Archivo, número verde, selo inclinado): só a tabela, desde o 1º.
  * Atualiza sozinha a cada poucos segundos e, quando não cabe, passa as páginas.
  *
- * Parâmetros: ?lang=pt (padrão es), ?rows=14 (linhas por página),
+ * Parâmetros: ?lang=pt (padrão es), ?rows=8 (linhas por página),
  * ?rotate=12 (segundos por página), ?top=50 (mostra só até essa posição).
  */
 
@@ -23,7 +23,7 @@ export default function StreamBoard() {
   const params = useSearchParams();
   const lang = params.get("lang") === "pt" ? "pt" : "es";
   const t = TEXT[lang];
-  const perPage = Math.min(30, Math.max(4, Number(params.get("rows")) || 14));
+  const perPage = Math.min(30, Math.max(4, Number(params.get("rows")) || 8));
   const rotate = Math.min(120, Math.max(4, Number(params.get("rotate")) || 12)) * 1000;
   const top = Number(params.get("top")) || 0;
 
@@ -63,6 +63,8 @@ export default function StreamBoard() {
 
   return (
     <div className="stream">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="s-banner" src="/header.png" alt="Major Coin Cup" />
       {!board || !rows.length ? (
         <p className="s-waiting">{t.waiting}</p>
       ) : (
