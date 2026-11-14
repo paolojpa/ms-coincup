@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { DEFAULT_TIERS, type Mode, type Tier } from "@/lib/payout";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { computePayouts, DEFAULT_TIERS, splitCoins, type Mode, type Tier } from "@/lib/payout";
 import type { Plan } from "@/lib/plan";
 
 type FileItem = { name: string; text: string };
@@ -158,6 +158,22 @@ export default function Panel() {
 
   const tiersChanged = JSON.stringify(tiers) !== savedTiers;
 
+  // Tabela geral: calculada no navegador a cada CSV, sem tocar no banco.
+  const standings = useMemo(() => (files.length ? computePayouts(files, tiers, mode) : []), [files, tiers, mode]);
+  const [boardFile, setBoardFile] = useState(0);
+  const [query, setQuery] = useState("");
+  const board = standings[Math.min(boardFile, Math.max(0, standings.length - 1))];
+  const boardRows = useMemo(() => {
+    if (!board) return [];
+    const q = query.trim().toLowerCase();
+    return board.teams.filter(
+      (t) =>
+        !q ||
+        (t.name ?? "").toLowerCase().includes(q) ||
+        t.members.some((m) => [m.epicName, m.discordName, m.discordId].some((v) => v?.toLowerCase().includes(q))),
+    );
+  }, [board, query]);
+
   return (
     <main>
       <div className="top">
@@ -290,6 +306,75 @@ export default function Panel() {
           </p>
         </section>
       </div>
+
+      {board && (
+        <section className="panel">
+          <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
+            <h2 style={{ margin: 0 }}>
+              General table · {mode === "sum" ? `${files.length} ${files.length === 1 ? "file" : "files"} so far` : board.file}
+            </h2>
+            <input
+              type="text"
+              placeholder="Search player or team"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{ maxWidth: 240 }}
+            />
+          </div>
+          {mode === "separate" && standings.length > 1 && (
+            <div className="seg" style={{ marginBottom: 12 }}>
+              {standings.map((s, i) => (
+                <button key={i} className={i === boardFile ? "on" : ""} onClick={() => setBoardFile(i)}>
+                  {s.file}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th className="num">Top</th>
+                  <th>Team</th>
+                  <th className="num">Games</th>
+                  <th className="num">Kills</th>
+                  <th className="num">W</th>
+                  {mode === "sum" && <th className="num">Points</th>}
+                  <th className="num">Coins each</th>
+                </tr>
+              </thead>
+              <tbody>
+                {boardRows.slice(0, 1000).map((t) => {
+                  const each = splitCoins(t.coins, board.teamSize, t.members.length)[0] ?? 0;
+                  return (
+                    <tr key={t.key} className={t.place <= 3 ? `podium p${t.place}` : undefined}>
+                      <td className="num">
+                        <b>{t.place}</b>
+                      </td>
+                      <td>
+                        {t.name && <div style={{ fontWeight: 600 }}>{t.name}</div>}
+                        <div className={t.name ? "muted" : undefined} style={t.name ? { fontSize: 13 } : { fontWeight: 600 }}>
+                          {t.members.map((m) => m.epicName ?? m.discordName ?? m.discordId).join(" · ")}
+                        </div>
+                      </td>
+                      <td className="num">{fmt(t.games)}</td>
+                      <td className="num">{fmt(t.kills)}</td>
+                      <td className="num">{fmt(t.wins)}</td>
+                      {mode === "sum" && <td className="num">{fmt(t.points)}</td>}
+                      <td className="num">{fmt(each)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {boardRows.length > 1000 && (
+            <p className="muted" style={{ fontSize: 13 }}>
+              Showing the first 1,000 of {fmt(boardRows.length)} teams. Use the search to find the rest.
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="panel">
         <div className="row" style={{ justifyContent: "space-between" }}>

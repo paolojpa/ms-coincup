@@ -64,3 +64,7 @@ td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top
 .scroll th { position: sticky; top: 0; background: var(--panel); }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .login { max-width: 360px; margin: 18vh auto 0; }
+tr.podium td:first-child b { display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; color: #0b0d0c; }
+tr.p1 td:first-child b { background: #f5c542; }
+tr.p2 td:first-child b { background: #c9d1cc; }
+tr.p3 td:first-child b { background: #d98c4a; }

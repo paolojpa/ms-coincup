@@ -25,7 +25,10 @@ export type Member = {
 export type Team = {
   key: string;
   members: Member[];
+  /** Nome da equipe no CSV ("Team Name"), quando existe. */
+  name: string | null;
   points: number;
+  games: number;
   wins: number;
   kills: number;
   bestPlacement: number;
@@ -163,6 +166,8 @@ export function teamsFromCsv(input: CsvInput): { teams: Team[]; teamSize: number
     teams.push({
       key: members.map((m) => m.key).sort().join("|"),
       members,
+      name: col(row, "Team Name", "Team", "Nombre del equipo") || null,
+      games: num(col(row, "Games", "Matches", "Partidas")),
       points: num(col(row, "Points", "Total Points", "Puntos", "Pontos")),
       wins: num(col(row, "Wins")),
       kills: num(col(row, "Kills", "Elims", "Eliminations")),
@@ -231,6 +236,8 @@ export function computePayouts(inputs: CsvInput[], tiers: Tier[], mode: Mode): P
       if (!prev) merged.set(t.key, { ...t, members: [...t.members], files: [...t.files] });
       else {
         prev.points += t.points;
+        prev.games += t.games;
+        prev.name = prev.name ?? t.name;
         prev.wins += t.wins;
         prev.kills += t.kills;
         prev.bestPlacement = Math.min(prev.bestPlacement, t.bestPlacement);
