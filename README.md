@@ -17,7 +17,7 @@ O crédito é um `$inc` em `wallet` no registro da season em curso (`players`, m
 
 No painel, a **General table** aparece ao subir o primeiro CSV. Com **Live on stream** ligado, cada mudança vai para `/stream`, que é pública (para usar como fonte de navegador no OBS, 1920x1080) e se atualiza sozinha a cada 8 segundos.
 
-Parâmetros de `/stream`: `?lang=pt` (padrão espanhol), `?rows=8` (linhas por página), `?rotate=12` (segundos por página), `?top=50` (só até essa posição).
+Parâmetros de `/stream`: `?lang=pt` (padrão espanhol), `?rows=14` (linhas por página), `?rotate=12` (segundos por página), `?top=50` (só até essa posição).
 
 ## Variáveis de ambiente (Vercel)
 
