@@ -13,6 +13,12 @@ As moedas de cada equipe são divididas igualmente pelo tamanho do modo (trio = 
 
 O crédito é um `$inc` em `wallet` no registro da season em curso (`players`, mesma regra do site e do bot). Cada pagamento fica em `coin_payouts`; os mesmos arquivos não podem ser pagos duas vezes, e **Undo** devolve o pagamento (sem deixar saldo negativo).
 
+## Tabela para a transmissão
+
+No painel, a **General table** aparece ao subir o primeiro CSV. Com **Live on stream** ligado, cada mudança vai para `/stream`, que é pública (para usar como fonte de navegador no OBS, 1920x1080) e se atualiza sozinha a cada 8 segundos.
+
+Parâmetros de `/stream`: `?lang=pt` (padrão espanhol), `?rows=8` (linhas por página), `?rotate=12` (segundos por página), `?top=50` (só até essa posição).
+
 ## Variáveis de ambiente (Vercel)
 
 | Variável | O que é |

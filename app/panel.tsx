@@ -169,10 +169,41 @@ export default function Panel() {
     return board.teams.filter(
       (t) =>
         !q ||
-        (t.name ?? "").toLowerCase().includes(q) ||
         t.members.some((m) => [m.epicName, m.discordName, m.discordId].some((v) => v?.toLowerCase().includes(q))),
     );
   }, [board, query]);
+
+  // Transmissão: com "Live on stream" ligado, cada mudança na tabela vai para /stream.
+  const [live, setLive] = useState(false);
+  const [liveNote, setLiveNote] = useState("");
+  useEffect(() => {
+    if (!live || !board) return;
+    const id = setTimeout(async () => {
+      try {
+        await api("/api/board", {
+          method: "PUT",
+          body: JSON.stringify({
+            title: name,
+            subtitle: mode === "sum" ? `${files.length} ${files.length === 1 ? "partida" : "partidas"}` : board.file ?? "",
+            showPoints: mode === "sum",
+            rows: board.teams.slice(0, 500).map((t) => ({
+              place: t.place,
+              players: t.members.map((m) => m.epicName ?? m.discordName ?? "?"),
+              games: t.games,
+              kills: t.kills,
+              wins: t.wins,
+              points: t.points,
+              prize: t.coins,
+            })),
+          }),
+        });
+        setLiveNote(`Stream updated ${new Date().toLocaleTimeString()}`);
+      } catch (e) {
+        setLiveNote((e as Error).message);
+      }
+    }, 800);
+    return () => clearTimeout(id);
+  }, [live, board, name, mode, files.length]);
 
   return (
     <main>
@@ -315,11 +346,31 @@ export default function Panel() {
             </h2>
             <input
               type="text"
-              placeholder="Search player or team"
+              placeholder="Search player"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{ maxWidth: 240 }}
             />
+          </div>
+          <div className="row" style={{ marginBottom: 12 }}>
+            <label className="row" style={{ gap: 6, cursor: "pointer" }}>
+              <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
+              Live on stream
+            </label>
+            <a href="/stream" target="_blank" rel="noreferrer" style={{ color: "var(--signal)" }}>
+              Open stream page
+            </a>
+            <button
+              className="ghost"
+              onClick={async () => {
+                setLive(false);
+                await api("/api/board", { method: "DELETE" }).catch(() => {});
+                setLiveNote("Stream cleared.");
+              }}
+            >
+              Clear stream
+            </button>
+            {liveNote && <span className="muted" style={{ fontSize: 13 }}>{liveNote}</span>}
           </div>
           {mode === "separate" && standings.length > 1 && (
             <div className="seg" style={{ marginBottom: 12 }}>
@@ -351,12 +402,7 @@ export default function Panel() {
                       <td className="num">
                         <b>{t.place}</b>
                       </td>
-                      <td>
-                        {t.name && <div style={{ fontWeight: 600 }}>{t.name}</div>}
-                        <div className={t.name ? "muted" : undefined} style={t.name ? { fontSize: 13 } : { fontWeight: 600 }}>
-                          {t.members.map((m) => m.epicName ?? m.discordName ?? m.discordId).join(" · ")}
-                        </div>
-                      </td>
+                      <td style={{ fontWeight: 600 }}>{t.members.map((m) => m.epicName ?? m.discordName ?? m.discordId).join(" + ")}</td>
                       <td className="num">{fmt(t.games)}</td>
                       <td className="num">{fmt(t.kills)}</td>
                       <td className="num">{fmt(t.wins)}</td>

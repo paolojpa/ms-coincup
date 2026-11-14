@@ -68,3 +68,51 @@ tr.podium td:first-child b { display: inline-grid; place-items: center; min-widt
 tr.p1 td:first-child b { background: #f5c542; }
 tr.p2 td:first-child b { background: #c9d1cc; }
 tr.p3 td:first-child b { background: #d98c4a; }
+
+/* ---------- /stream: mesmo visual do leaderboard do site ---------- */
+.stream {
+  --ground: #090e0b; --ground-2: #0d130f; --surface: #111a14; --edge: rgba(255,255,255,.1);
+  --ink-2: rgba(255,255,255,.7); --ink-3: rgba(255,255,255,.5); --ink-4: rgba(255,255,255,.4);
+  min-height: 100vh; padding: 2.6vw 4vw; background:
+    radial-gradient(60% 50% at 50% -10%, rgba(34,217,98,.12), transparent 70%), var(--ground);
+  color: #fff; font-family: Inter, system-ui, sans-serif; font-size: max(13px, 1vw);
+  display: flex; flex-direction: column; gap: 1.6vw;
+}
+.stream h1, .s-rank, .s-pts, .s-eyebrow, .s-th, .s-pos, .s-prize { font-family: Outfit, Inter, system-ui, sans-serif; }
+.s-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 2vw; }
+.s-eyebrow { margin: 0 0 .4em; display: flex; align-items: center; gap: .6em; color: var(--signal); font-size: .95em; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+.s-dot { width: .6em; height: .6em; border-radius: 50%; background: var(--signal); box-shadow: 0 0 12px var(--signal); animation: s-pulse 1.6s ease-in-out infinite; }
+@keyframes s-pulse { 50% { opacity: .35; } }
+.s-title { margin: 0; font-size: 3.2em; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.s-meta { margin: 0; color: var(--ink-3); font-size: .95em; }
+.s-waiting { color: var(--ink-3); font-size: 1.6em; text-align: center; margin-top: 10vh; }
+.s-podium { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4vw; align-items: end; }
+.s-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: .4em; padding: 1.1em 1em 1.1em; border: 1px solid; border-radius: 1.2em; text-align: center; min-height: 10.5em; justify-content: flex-end; }
+.s-card.first { min-height: 13em; }
+.s-crown { font-size: 1.8em; line-height: 1; }
+.s-rank { font-size: 2.4em; font-weight: 800; line-height: 1; }
+.s-card.first .s-rank { font-size: 3.2em; }
+.s-names { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .5em; font-family: Outfit, Inter, sans-serif; font-weight: 700; font-size: 1.25em; line-height: 1.25; }
+.s-names span:not(:last-child)::after { content: " +"; color: var(--ink-4); font-weight: 500; }
+.s-card.first .s-names { font-size: 1.5em; }
+.s-pts { color: var(--signal); font-size: 1.6em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.s-pts small { color: var(--ink-3); font-size: .5em; font-weight: 600; }
+.s-sub { color: var(--ink-3); font-size: .9em; font-variant-numeric: tabular-nums; }
+.s-prize { margin-top: .2em; border: 1px solid rgba(34,217,98,.35); background: rgba(34,217,98,.1); color: var(--signal); border-radius: 999px; padding: .15em .8em; font-size: .9em; font-weight: 700; }
+.s-table { border: 1px solid var(--edge); background: var(--ground-2); border-radius: 1em; overflow: hidden; }
+.s-row { display: grid; grid-template-columns: 4em minmax(0,1fr) 6.5em 5.5em 4em 6em 7.5em; align-items: center; gap: 1em; padding: 0 1.4em; height: 2.9em; border-bottom: 1px solid var(--edge); font-variant-numeric: tabular-nums; animation: s-in .45s ease both; }
+.s-row.nopts { grid-template-columns: 4em minmax(0,1fr) 6.5em 5.5em 4em 7.5em; }
+.s-row > span:nth-child(n+3) { text-align: right; color: var(--ink-2); }
+.s-row:last-of-type { border-bottom: 0; }
+@keyframes s-in { from { opacity: 0; transform: translateY(6px); } }
+.s-th { height: 2.4em; background: var(--surface); color: var(--ink-4); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; animation: none; }
+.s-th > span { font-size: .78em; }
+.s-th > span:nth-child(n+3) { color: var(--ink-4) !important; }
+.s-pos { text-align: center; font-weight: 700; font-size: 1.1em; }
+.s-team { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 1.05em; }
+.s-row > .s-green { color: var(--signal) !important; font-family: Outfit, Inter, sans-serif; font-weight: 700; font-size: 1.05em; }
+.s-pager { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: .8em 1.4em; color: var(--ink-3); font-size: .85em; border-top: 1px solid var(--edge); }
+.s-dots { display: flex; gap: .4em; }
+.s-dots i { width: .5em; height: .5em; border-radius: 50%; background: var(--ink-4); }
+.s-dots i.on { background: var(--signal); }
+.s-th > span:first-child { text-align: center; }
