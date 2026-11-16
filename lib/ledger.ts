@@ -7,6 +7,11 @@ import { botConfig, db } from "./server";
  * pagamentos válidos, e um índice único parcial em `checksum` impede pagar duas
  * vezes os mesmos CSVs (mesmo com dois cliques ao mesmo tempo). Desfazer o
  * pagamento tira o `active`, liberando os mesmos arquivos para um novo pagamento.
+ *
+ * Ranking MSCS: as Major Coins da Coin Cup contam no ranking do circuito. O
+ * site soma o ranking a partir de `ranking_adjustments` (lib/ranking-adjustments.ts
+ * no ms-webpage-v2), não do saldo, então cada pagamento grava ali uma linha por
+ * jogador (com `payoutId`), e o Undo apaga essas linhas.
  */
 
 export type PayoutDoc = {
@@ -23,6 +28,16 @@ export type PayoutDoc = {
   totalCoins: number;
   createdAt: Date;
   revertedAt?: Date;
+};
+
+type RankingAdjustmentDoc = {
+  playerKey: string;
+  epicUsername: string | null;
+  coins: number;
+  at: Date;
+  by: string;
+  reason: string | null;
+  payoutId: ObjectId;
 };
 
 type PlayerDoc = {
@@ -42,6 +57,40 @@ async function payouts() {
     indexed = true;
   }
   return col;
+}
+
+let rankingIndexed = false;
+async function rankingAdjustments() {
+  const col = (await db()).collection<RankingAdjustmentDoc>("ranking_adjustments");
+  if (!rankingIndexed) {
+    await col.createIndex({ payoutId: 1 });
+    rankingIndexed = true;
+  }
+  return col;
+}
+
+/** Uma linha por jogador no ranking MSCS, com o nome da Epic de `verified_players` quando houver. */
+async function addToRanking(doc: PayoutDoc): Promise<void> {
+  const names = new Map(
+    (
+      await (await db())
+        .collection<{ discordId: string; epicName?: string | null }>("verified_players")
+        .find({ discordId: { $in: doc.credits.map((c) => c.discordId) } }, { projection: { discordId: 1, epicName: 1 } })
+        .toArray()
+    ).map((p) => [p.discordId, p.epicName ?? null]),
+  );
+  await (await rankingAdjustments()).insertMany(
+    doc.credits.map(({ discordId, coins }) => ({
+      playerKey: `discord:${discordId}`,
+      epicUsername: names.get(discordId) ?? null,
+      coins,
+      at: doc.createdAt,
+      by: "coin-cup",
+      reason: doc.name,
+      payoutId: doc._id,
+    })),
+    { ordered: false },
+  );
 }
 
 function walletOps(
@@ -119,6 +168,7 @@ export async function pay(input: {
   }
 
   await (await db()).collection<PlayerDoc>("players").bulkWrite(walletOps(credits, config, 1), { ordered: false });
+  await addToRanking(doc);
   await col.updateOne({ _id: doc._id }, { $set: { status: "done" } });
   return { ok: true, id: doc._id.toHexString(), totalCoins, players: credits.length };
 }
@@ -135,6 +185,7 @@ export async function revert(id: string): Promise<{ ok: true } | { ok: false; er
   await (await db())
     .collection<PlayerDoc>("players")
     .bulkWrite(walletOps(doc.credits, { guildId: doc.guildId, season: doc.season }, -1), { ordered: false });
+  await (await rankingAdjustments()).deleteMany({ payoutId: doc._id });
   return { ok: true };
 }
 
