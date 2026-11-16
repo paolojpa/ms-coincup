@@ -189,6 +189,16 @@ export async function revert(id: string): Promise<{ ok: true } | { ok: false; er
   return { ok: true };
 }
 
+/**
+ * Apaga do histórico os pagamentos já desfeitos. Só eles: um pagamento "done" ou "pending" nunca é apagado,
+ * porque é o registro do que foi creditado. Desfeitos não mexem mais em carteira nem em ranking.
+ */
+export async function clearUndone(): Promise<number> {
+  const col = await payouts();
+  const { deletedCount } = await col.deleteMany({ status: "reverted" });
+  return deletedCount;
+}
+
 export async function history() {
   const col = await payouts();
   const docs = await col

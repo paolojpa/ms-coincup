@@ -148,8 +148,8 @@ export function teamsFromCsv(input: CsvInput): { teams: Team[]; teamSize: number
   if (!rows.length) return { teams: [], teamSize: 0, warnings: [`${input.name}: empty file.`] };
   const teamSize = detectTeamSize(rows[0]);
   if (!teamSize) warnings.push(`${input.name}: no player columns found.`);
-  if (col(rows[0], "Points", "Total Points", "Puntos", "Pontos") === undefined)
-    warnings.push(`${input.name}: no "Points" column, ranking uses the "Placement" column only.`);
+  if (col(rows[0], "Points", "Total Points", "Score", "Puntos", "Pontos") === undefined)
+    warnings.push(`${input.name}: no "Points" column (only matters when combining several files).`);
 
   const teams: Team[] = [];
   rows.forEach((row, idx) => {
@@ -168,7 +168,7 @@ export function teamsFromCsv(input: CsvInput): { teams: Team[]; teamSize: number
       members,
       name: col(row, "Team Name", "Team", "Nombre del equipo") || null,
       games: num(col(row, "Games", "Matches", "Partidas")),
-      points: num(col(row, "Points", "Total Points", "Puntos", "Pontos")),
+      points: num(col(row, "Points", "Total Points", "Score", "Puntos", "Pontos")),
       wins: num(col(row, "Wins")),
       kills: num(col(row, "Kills", "Elims", "Eliminations")),
       bestPlacement: placement,
@@ -208,9 +208,21 @@ function rank(teams: Team[], tiers: Tier[], byPoints: boolean): RankedTeam[] {
 }
 
 /**
- * "sum": junta os CSVs numa tabela final, somando pontos/vitórias/kills de cada
- * equipe (mesmos jogadores). "separate": cada CSV é um torneio e paga sozinho,
- * pela posição do próprio CSV.
+ * Jogador que aparece em mais de uma equipe (trocou de trio): regra da staff, cada equipe recebe pela própria
+ * posição e o jogador cobra em todas. Fica só como aviso na prévia.
+ */
+function repeatedPlayers(teams: Iterable<Team>): string[] {
+  const seen = new Map<string, number>();
+  for (const t of teams) for (const m of t.members) seen.set(m.key, (seen.get(m.key) ?? 0) + 1);
+  return [...seen]
+    .filter(([, count]) => count > 1)
+    .map(([key, count]) => `${key} appears in ${count} different teams; each team is ranked on its own.`);
+}
+
+/**
+ * "sum": um CSV só paga pela coluna "Placement" do próprio CSV (a colocação final do Yunite, com os
+ * desempates dele). Vários CSVs viram uma tabela final, somando pontos/vitórias/kills de cada
+ * equipe (mesmos jogadores). "separate": cada CSV é um torneio e paga sozinho, pela posição dele.
  */
 export function computePayouts(inputs: CsvInput[], tiers: Tier[], mode: Mode): Payout[] {
   const parsed = inputs.map((input) => ({ input, ...teamsFromCsv(input) }));
@@ -222,6 +234,11 @@ export function computePayouts(inputs: CsvInput[], tiers: Tier[], mode: Mode): P
       teams: rank(p.teams, tiers, false),
       warnings: p.warnings,
     }));
+  }
+
+  if (parsed.length === 1) {
+    const [p] = parsed;
+    return [{ file: null, teamSize: p.teamSize, teams: rank(p.teams, tiers, false), warnings: [...p.warnings, ...repeatedPlayers(p.teams)] }];
   }
 
   const warnings = parsed.flatMap((p) => p.warnings);
@@ -246,11 +263,7 @@ export function computePayouts(inputs: CsvInput[], tiers: Tier[], mode: Mode): P
     }
   }
 
-  // Jogador que aparece em duas equipes diferentes: trocou de trio no meio.
-  const seen = new Map<string, number>();
-  for (const t of merged.values()) for (const m of t.members) seen.set(m.key, (seen.get(m.key) ?? 0) + 1);
-  for (const [key, count] of seen)
-    if (count > 1) warnings.push(`${key} appears in ${count} different teams; each team is ranked on its own.`);
+  warnings.push(...repeatedPlayers(merged.values()));
 
   const anyPoints = parsed.some((p) => p.teams.some((t) => t.points !== 0));
   if (!anyPoints) warnings.push("No points found in any file, so the final table cannot be combined reliably.");
