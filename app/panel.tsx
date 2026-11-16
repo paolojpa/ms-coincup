@@ -152,6 +152,19 @@ export default function Panel() {
     }
   }
 
+  async function clearUndone() {
+    const count = history.filter((h) => h.status === "reverted").length;
+    if (!window.confirm(`Delete ${count} undone ${count === 1 ? "payout" : "payouts"} from the history? Paid ones stay.`)) return;
+    setError("");
+    try {
+      const d = await api<{ deleted: number }>("/api/payouts", { method: "DELETE" });
+      setNotice(`Removed ${d.deleted} undone ${d.deleted === 1 ? "payout" : "payouts"} from the history.`);
+      await loadHistory();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
     window.location.href = "/login";
@@ -529,7 +542,14 @@ export default function Panel() {
       </section>
 
       <section className="panel">
-        <h2>History</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <h2>History</h2>
+          {history.some((h) => h.status === "reverted") && (
+            <button className="danger" onClick={clearUndone}>
+              Clear undone
+            </button>
+          )}
+        </div>
         {history.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
             No payouts yet.
